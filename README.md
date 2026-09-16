@@ -49,4 +49,15 @@ Clone the repository:
 git clone https://github.com/Alsantek-me/linux-user-timer.git
 ```
 
-# 2. 
+## 2. Make it executable
+```bash
+chmod +x install.sh
+```
+
+## 3. Run the install script
+```bash
+sudo ./install.sh
+```
+### You can access it via http://127.0.0.1:8765/admin 
+
+
