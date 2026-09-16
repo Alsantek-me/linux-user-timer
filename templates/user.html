@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Manage {{ user.username }}
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+
+            font-family:
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #f4f5f7;
+            color: #1f2937;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+
+            padding: 20px 30px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        main {
+            max-width: 1100px;
+
+            margin: 30px auto;
+
+            padding: 0 20px;
+        }
+
+        .back {
+            display: inline-block;
+
+            margin-bottom: 20px;
+
+            color: #2563eb;
+
+            text-decoration: none;
+
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 20px;
+
+            margin-bottom: 20px;
+
+            box-shadow:
+                0 2px 8px rgba(
+                    0,
+                    0,
+                    0,
+                    0.08
+                );
+        }
+
+        .header-row {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 20px;
+
+            flex-wrap: wrap;
+        }
+
+        .username {
+            font-size: 28px;
+
+            font-weight: 700;
+        }
+
+        .status {
+            display: inline-block;
+
+            padding: 6px 12px;
+
+            border-radius: 20px;
+
+            font-size: 13px;
+        }
+
+        .status-locked {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-unlocked {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        h3 {
+            margin-bottom: 8px;
+        }
+
+        .actions {
+            display: flex;
+
+            gap: 10px;
+
+            flex-wrap: wrap;
+
+            margin-top: 20px;
+        }
+
+        button {
+            border: 0;
+
+            border-radius: 7px;
+
+            padding: 9px 15px;
+
+            cursor: pointer;
+
+            font-size: 14px;
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .warning {
+            background: #d97706;
+            color: white;
+        }
+
+        .secondary {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        table {
+            width: 100%;
+
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+
+            padding: 12px;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            font-size: 13px;
+
+            color: #6b7280;
+        }
+
+        input,
+        select {
+            border: 1px solid #d1d5db;
+
+            border-radius: 7px;
+
+            padding: 8px 10px;
+
+            font-size: 14px;
+
+            background: white;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        input[type="time"] {
+            width: 130px;
+        }
+
+        .inline-form {
+            display: flex;
+
+            gap: 8px;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+        }
+
+        .window-form {
+            display: grid;
+
+            grid-template-columns:
+                150px
+                130px
+                130px
+                auto;
+
+            gap: 10px;
+
+            align-items: center;
+        }
+
+        .window {
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            gap: 15px;
+
+            padding: 12px 0;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .window:last-child {
+            border-bottom: 0;
+        }
+
+        .muted {
+            color: #6b7280;
+
+            font-size: 14px;
+        }
+
+        .danger-zone {
+            border: 1px solid #fecaca;
+
+            background: #fff7f7;
+        }
+
+        .grant-box {
+            display: flex;
+
+            gap: 10px;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 700px) {
+
+            table {
+                display: block;
+
+                overflow-x: auto;
+            }
+
+            .window-form {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>
+        Parental Control
+    </h1>
+
+</header>
+
+<main>
+
+    <a
+        class="back"
+        href="/admin"
+    >
+        ← Back to Users
+    </a>
+
+
+    <!-- USER HEADER -->
+
+    <div class="card">
+
+        <div class="header-row">
+
+            <div>
+
+                <div class="username">
+                    {{ user.username }}
+                </div>
+
+                <div class="muted">
+                    Linux user ID:
+                    {{ user.id }}
+                </div>
+
+            </div>
+
+
+            {% if locked %}
+
+                <span class="status status-locked">
+                    Locked
+                </span>
+
+            {% else %}
+
+                <span class="status status-unlocked">
+                    Unlocked
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="actions">
+
+            {% if locked %}
+
+                <form
+                    method="post"
+                    action="/admin/users/{{ user.id }}/unlock"
+                >
+
+                    <button
+                        class="primary"
+                        type="submit"
+                    >
+                        Unlock
+                    </button>
+
+                </form>
+
+            {% else %}
+
+                <form
+                    method="post"
+                    action="/admin/users/{{ user.id }}/lock"
+                >
+
+                    <button
+                        class="warning"
+                        type="submit"
+                    >
+                        Lock
+                    </button>
+
+                </form>
+
+            {% endif %}
+
+
+            <form
+                method="post"
+                action="/admin/users/{{ user.id }}/terminate"
+            >
+
+                <button
+                    class="secondary"
+                    type="submit"
+                >
+                    Terminate Session
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- DAILY ALLOWANCES -->
+
+    <div class="card">
+
+        <h2>
+            Daily Allowance
+        </h2>
+
+        <p class="muted">
+            Maximum amount of usage allowed on each day.
+        </p>
+
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Day
+                    </th>
+
+                    <th>
+                        Hours
+                    </th>
+
+                    <th>
+                        Minutes
+                    </th>
+
+                    <th>
+                        Save
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for weekday, name in weekdays %}
+
+                {% set total_seconds = allowances.get(
+                    weekday,
+                    0
+                ) %}
+
+                {% set total_minutes = total_seconds // 60 %}
+
+                {% set hours = total_minutes // 60 %}
+
+                {% set minutes = total_minutes % 60 %}
+
+                <tr>
+
+                    <td>
+                        <strong>
+                            {{ name }}
+                        </strong>
+                    </td>
+
+                    <td colspan="2">
+
+                        <form
+                            class="inline-form"
+                            method="post"
+                            action="/admin/users/{{ user.id }}/allowance"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="weekday"
+                                value="{{ weekday }}"
+                            >
+
+                            <input
+                                type="number"
+                                name="hours"
+                                min="0"
+                                value="{{ hours }}"
+                                required
+                            >
+
+                            <span>
+                                hours
+                            </span>
+
+                            <input
+                                type="number"
+                                name="minutes"
+                                min="0"
+                                max="59"
+                                value="{{ minutes }}"
+                                required
+                            >
+
+                            <span>
+                                minutes
+                            </span>
+
+                    </td>
+
+                    <td>
+
+                            <button
+                                class="primary"
+                                type="submit"
+                            >
+                                Save
+                            </button>
+
+                        </form>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- ACCESS WINDOWS -->
+
+    <div class="card">
+
+        <h2>
+            Access Windows
+        </h2>
+
+        <p class="muted">
+            Define when this user is allowed to access
+            the computer. Multiple windows can be created
+            for the same day.
+        </p>
+
+
+        {% for weekday, name in weekdays %}
+
+            {% set day_windows = [] %}
+
+            {% for window in windows %}
+
+                {% if window.weekday == weekday %}
+
+                    {% set _ = day_windows.append(window) %}
+
+                {% endif %}
+
+            {% endfor %}
+
+
+            <h3>
+                {{ name }}
+            </h3>
+
+
+            {% for window in day_windows %}
+
+                {% set start_hour =
+                    window.start_minute // 60
+                %}
+
+                {% set start_min =
+                    window.start_minute % 60
+                %}
+
+                {% set end_hour =
+                    window.end_minute // 60
+                %}
+
+                {% set end_min =
+                    window.end_minute % 60
+                %}
+
+
+                <div class="window">
+
+                    <div>
+
+                        <strong>
+                            {{ "%02d:%02d" | format(
+                                start_hour,
+                                start_min
+                            ) }}
+
+                            –
+
+                            {{ "%02d:%02d" | format(
+                                end_hour,
+                                end_min
+                            ) }}
+                        </strong>
+
+                    </div>
+
+
+                    <form
+                        method="post"
+                        action="/admin/windows/{{ window.id }}/delete"
+                    >
+
+                        <button
+                            class="danger"
+                            type="submit"
+                        >
+                            Remove
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% endfor %}
+
+
+            <form
+                class="window-form"
+                method="post"
+                action="/admin/users/{{ user.id }}/window"
+                style="margin-top: 12px;"
+            >
+
+                <input
+                    type="hidden"
+                    name="weekday"
+                    value="{{ weekday }}"
+                >
+
+                <input
+                    type="time"
+                    name="start_time"
+                    required
+                >
+
+                <input
+                    type="time"
+                    name="end_time"
+                    required
+                >
+
+                <button
+                    class="primary"
+                    type="submit"
+                >
+                    Add Window
+                </button>
+
+            </form>
+
+        {% endfor %}
+
+    </div>
+
+
+    <!-- TEMPORARY GRANT -->
+
+    <div class="card">
+
+        <h2>
+            Give Temporary Time
+        </h2>
+
+        <p class="muted">
+            Add extra time that can be used outside the
+            normal allowance.
+        </p>
+
+
+        <form
+            class="grant-box"
+            method="post"
+            action="/admin/users/{{ user.id }}/grant"
+        >
+
+            <input
+                type="number"
+                name="hours"
+                min="0"
+                value="0"
+                required
+            >
+
+            <span>
+                hours
+            </span>
+
+            <input
+                type="number"
+                name="minutes"
+                min="0"
+                max="59"
+                value="5"
+                required
+            >
+
+            <span>
+                minutes
+            </span>
+
+            <button
+                class="primary"
+                type="submit"
+            >
+                Give Time
+            </button>
+
+        </form>
+
+    </div>
+
+
+    <!-- GRANT HISTORY -->
+
+    <div class="card">
+
+        <h2>
+            Temporary Grants
+        </h2>
+
+        {% if grants %}
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Time
+                        </th>
+
+                        <th>
+                            Created
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for grant in grants %}
+
+                    <tr>
+
+                        <td>
+
+                            {% set grant_minutes =
+                                grant.seconds // 60
+                            %}
+
+                            {% set grant_hours =
+                                grant_minutes // 60
+                            %}
+
+                            {% set grant_remaining =
+                                grant_minutes % 60
+                            %}
+
+                            {{ grant_hours }}h
+                            {{ grant_remaining }}m
+
+                        </td>
+
+                        <td>
+                            {{ grant.created_at }}
+                        </td>
+
+                        <td>
+
+                            {% if grant.consumed %}
+
+                                Used
+
+                            {% else %}
+
+                                Available
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <p class="muted">
+                No temporary grants yet.
+            </p>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- DANGER ZONE -->
+
+    <div class="card danger-zone">
+
+        <h2>
+            Danger Zone
+        </h2>
+
+        <p class="muted">
+            Removing this user deletes their parental
+            control configuration from this application.
+            It does not delete the Linux account.
+        </p>
+
+        <form
+            method="post"
+            action="/admin/users/{{ user.id }}/delete"
+            onsubmit="
+                return confirm(
+                    'Remove this user from parental control?'
+                );
+            "
+        >
+
+            <button
+                class="danger"
+                type="submit"
+            >
+                Remove from Parental Control
+            </button>
+
+        </form>
+
+    </div>
+
+</main>
+
+</body>
+</html>
