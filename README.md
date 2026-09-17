@@ -46,7 +46,7 @@ The enforcement service requires **root privileges** because it manages other Li
 Clone the repository:
 
 ```bash
-git clone https://github.com/Alsantek-me/linux-user-timer.git
+git clone https://git.shihaam.dev/Alsan/linux-user-timer.git
 ```
 
 ## 2. Make it executable
