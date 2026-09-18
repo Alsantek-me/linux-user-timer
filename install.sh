@@ -156,6 +156,7 @@ case "$PACKAGE_MANAGER" in
 esac
 
 
+
 # ============================================================
 # Verify Python
 # ============================================================
@@ -201,6 +202,27 @@ echo "[3/5] Installing Python packages"
 
 
 # ============================================================
+# Remove legacy SQLite storage
+# ============================================================
+
+LEGACY_DB="$INSTALL_DIR/data/parental-control.db"
+
+if [ -f "$LEGACY_DB" ]; then
+    echo
+    echo "Removing legacy SQLite database:"
+    echo "  $LEGACY_DB"
+    rm -f "$LEGACY_DB"
+fi
+
+mkdir -p "$INSTALL_DIR/data"
+chmod 700 "$INSTALL_DIR/data"
+
+# Keep the configuration and runtime state readable/writable only by root.
+[ -f "$INSTALL_DIR/data/config.yaml" ] && chmod 600 "$INSTALL_DIR/data/config.yaml"
+[ -f "$INSTALL_DIR/data/state.json" ] && chmod 600 "$INSTALL_DIR/data/state.json"
+
+
+# ============================================================
 # Install systemd service
 # ============================================================
 
@@ -208,11 +230,29 @@ echo
 echo "[4/5] Installing systemd service"
 
 SERVICE_FILE="/etc/systemd/system/parental-control.service"
+SECRET_DIR="/etc/parental-control"
+SECRET_FILE="$SECRET_DIR/session-secret"
+SECRET_ENV_FILE="$SECRET_DIR/session-secret.env"
+
+install -d -m 700 "$SECRET_DIR"
+
+if [ ! -s "$SECRET_FILE" ]; then
+    "$INSTALL_DIR/.venv/bin/python" -c \
+        'import secrets; print(secrets.token_urlsafe(48))' \
+        > "$SECRET_FILE"
+    chmod 600 "$SECRET_FILE"
+fi
+
+# systemd reads the environment file; the raw secret is kept separately
+# so it is easy to rotate without changing the service definition.
+printf 'PARENTAL_CONTROL_SESSION_SECRET=%s\n' "$(cat "$SECRET_FILE")" > "$SECRET_ENV_FILE"
+chmod 600 "$SECRET_ENV_FILE"
 
 sed \
     "s|%INSTALL_DIR%|$INSTALL_DIR|g" \
     "$INSTALL_DIR/parental-control.service" \
     > "$SERVICE_FILE"
+
 
 
 # ============================================================

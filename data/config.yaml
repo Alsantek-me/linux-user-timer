@@ -1,0 +1,6 @@
+version: 1
+auth:
+  pam_service: login
+  admin_users:
+  - root
+users: []

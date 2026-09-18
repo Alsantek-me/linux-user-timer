@@ -254,6 +254,14 @@
         Parental Control
     </h1>
 
+    <div style="margin-top:8px;font-size:14px;">Signed in as <strong>{{ username }}</strong>
+        <form method="post" action="/logout" style="display:inline;margin-left:12px;">
+                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <button type="submit" class="button-secondary">Log out</button>
+        </form>
+    </div>
+
 </header>
 
 
@@ -345,6 +353,7 @@
                     method="post"
                     action="/admin/users/{{ user.id }}/delete"
                 >
+                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
 
                     <button
                         class="button-danger"
@@ -401,6 +410,7 @@
             method="post"
             action="/admin/users"
         >
+                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
 
 
             <input

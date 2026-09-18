@@ -2,12 +2,8 @@ import threading
 import time
 from datetime import datetime
 
-from .enforcement import (
-    enforce_all_users,
-    record_usage,
-    get_user_policy,
-    consume_grant_seconds,
-)
+from .enforcement import enforce_all_users
+from .storage import record_usage, get_user_policy, consume_grant_seconds
 
 
 CHECK_INTERVAL = 5
