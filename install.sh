@@ -113,7 +113,9 @@ echo "[1/5] Installing dependencies"
 case "$PACKAGE_MANAGER" in
 
     pacman)
-        pacman -Syu --needed --noconfirm \
+        # Do NOT use -Syu here. This installer must not upgrade the whole
+        # Arch system; it only installs the packages required by this app.
+        pacman -S --needed --noconfirm \
             python \
             python-pip
         ;;
@@ -156,7 +158,6 @@ case "$PACKAGE_MANAGER" in
 esac
 
 
-
 # ============================================================
 # Verify Python
 # ============================================================
@@ -171,6 +172,27 @@ PYTHON="$(command -v python3)"
 echo
 echo "Python:"
 "$PYTHON" --version
+echo
+
+
+# ============================================================
+# Prepare PAM administration group
+# ============================================================
+
+echo "Preparing PAM administration group"
+
+if ! getent group pam >/dev/null 2>&1; then
+    echo "Creating system group: pam"
+    groupadd --system pam
+fi
+
+if ! id -nG root | tr " " "\n" | grep -qx "pam"; then
+    echo "Adding root to group: pam"
+    usermod -aG pam root
+fi
+
+echo "PAM group:"
+getent group pam
 echo
 
 
@@ -193,9 +215,6 @@ fi
 
 echo
 echo "[3/5] Installing Python packages"
-
-"$INSTALL_DIR/.venv/bin/python" -m pip install \
-    --upgrade pip
 
 "$INSTALL_DIR/.venv/bin/python" -m pip install \
     -r "$INSTALL_DIR/requirements.txt"

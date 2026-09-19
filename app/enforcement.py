@@ -3,9 +3,6 @@ import subprocess
 
 from .storage import (
     get_user_policy,
-    get_remaining_grant_seconds,
-    consume_grant_seconds,
-    record_usage,
     record_event,
     list_users,
 )
@@ -40,6 +37,7 @@ def current_time():
 
 
 def is_inside_window(windows, minute: int) -> bool:
+    # No configured windows means that no time-of-day restriction exists.
     if not windows:
         return True
 
@@ -57,14 +55,17 @@ def evaluate_user(user_id: int, username: str):
         usage_seconds,
         windows,
         grant_seconds,
-    ) = get_user_policy(user_id, weekday)
+    ) = get_user_policy(user_id, weekday, now.date())
 
     inside_window = is_inside_window(windows, minute)
     allowance_remaining = max(0, allowance_seconds - usage_seconds)
-    total_remaining = allowance_remaining + grant_seconds
     logged_in = user_has_session(username)
 
-    allowed_by_schedule = inside_window and allowance_remaining > 0
+    # A user's normal allowance is always constrained by the configured
+    # access window (when one exists). A temporary grant bypasses the window
+    # and normal allowance by design.
+    normal_access_available = allowance_remaining > 0
+    allowed_by_schedule = inside_window and normal_access_available
     allowed_by_grant = grant_seconds > 0
     should_allow = allowed_by_schedule or allowed_by_grant
 
@@ -104,12 +105,13 @@ def evaluate_user(user_id: int, username: str):
         "weekday": weekday,
         "minute": minute,
         "inside_window": inside_window,
+        "has_configured_windows": bool(windows),
         "logged_in": logged_in,
         "allowance_seconds": allowance_seconds,
         "usage_seconds": usage_seconds,
         "allowance_remaining": allowance_remaining,
         "grant_seconds": grant_seconds,
-        "total_remaining": total_remaining,
+        "normal_access_available": normal_access_available,
         "allowed": should_allow,
     }
 

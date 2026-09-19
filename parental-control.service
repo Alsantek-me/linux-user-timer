@@ -11,7 +11,7 @@ Environment="PATH=%INSTALL_DIR%/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/bi
 Environment="PARENTAL_CONTROL_ENFORCEMENT=1"
 EnvironmentFile=-/etc/parental-control/session-secret.env
 
-ExecStart=%INSTALL_DIR%/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8765
+ExecStart=%INSTALL_DIR%/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8765
 
 Restart=always
 RestartSec=5

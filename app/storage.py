@@ -1,10 +1,9 @@
 import json
 import os
 import tempfile
-from contextlib import contextmanager
-from datetime import datetime
-from pathlib import Path
+from datetime import datetime, date, timedelta
 from threading import RLock
+from pathlib import Path
 
 import yaml
 
@@ -19,7 +18,7 @@ DEFAULT_CONFIG = {
     "version": 1,
     "auth": {
         "pam_service": "login",
-        "admin_users": [],
+        "pam_group": "pam",
     },
     "users": [],
 }
@@ -68,9 +67,13 @@ def _load_yaml():
 
     data.setdefault("version", 1)
     data.setdefault("auth", {})
+    if not isinstance(data["auth"], dict):
+        raise ValueError("config.yaml auth must be an object")
     data["auth"].setdefault("pam_service", "login")
-    data["auth"].setdefault("admin_users", [])
+    data["auth"].setdefault("pam_group", "pam")
     data.setdefault("users", [])
+    if not isinstance(data["users"], list):
+        raise ValueError("config.yaml users must be a list")
     return data
 
 
@@ -124,8 +127,6 @@ def initialize_storage():
         if not STATE_PATH.exists():
             _save_json(DEFAULT_STATE)
 
-        # Keep files usable after manual edits while avoiding destructive
-        # initialization or recreation of any database.
         config = _load_yaml()
         state = _load_json()
         _save_yaml(config)
@@ -141,14 +142,14 @@ def get_pam_service():
     return get_config()["auth"].get("pam_service", "login")
 
 
-def admin_users():
-    value = get_config()["auth"].get("admin_users", [])
-    return {str(item) for item in value}
+def get_pam_group():
+    return get_config()["auth"].get("pam_group", "pam")
 
 
 def is_admin_allowed(username: str) -> bool:
-    allowed = admin_users()
-    return not allowed or username in allowed
+    """Keep authorization in users.py so PAM group membership is system-backed."""
+    from .users import user_in_group
+    return user_in_group(username, get_pam_group())
 
 
 def _find_user(config, user_id):
@@ -256,7 +257,7 @@ def set_allowance(user_id: int, weekday: int, seconds: int):
             raise KeyError("User not found")
 
         user.setdefault("allowances", {})
-        user["allowances"][str(weekday)] = int(seconds)
+        user["allowances"][str(weekday)] = max(0, int(seconds))
         _save_yaml(config)
 
 
@@ -298,7 +299,26 @@ def delete_window(window_id: int):
         return int(owner["id"])
 
 
-def get_user_policy(user_id: int, weekday: int):
+def _active_grant_seconds(state, user_id: int, now_iso: str) -> int:
+    return sum(
+        int(grant["remaining_seconds"])
+        for grant in state["temporary_grants"]
+        if int(grant["user_id"]) == int(user_id)
+        and not grant.get("consumed", False)
+        and int(grant.get("remaining_seconds", 0)) > 0
+        and (
+            grant.get("expires_at") is None
+            or grant["expires_at"] > now_iso
+        )
+    )
+
+
+def get_user_policy(user_id: int, weekday: int, on_date: date | None = None):
+    """Return the complete policy for a specific weekday/date.
+
+    Configuration is always read from the current files, so allowance and
+    access-window changes are order-independent.
+    """
     with _lock:
         config = _load_yaml()
         user = _find_user(config, user_id)
@@ -318,22 +338,14 @@ def get_user_policy(user_id: int, weekday: int):
         )
 
         state = _load_json()
-        today = datetime.now().date().isoformat()
+        target_date = on_date or datetime.now().date()
+        today = target_date.isoformat()
         usage_seconds = int(
             state["usage"].get(f"{int(user_id)}:{today}", 0)
         )
 
         now = datetime.now().isoformat()
-        grant_seconds = sum(
-            int(grant["remaining_seconds"])
-            for grant in state["temporary_grants"]
-            if int(grant["user_id"]) == int(user_id)
-            and not grant.get("consumed", False)
-            and (
-                grant.get("expires_at") is None
-                or grant["expires_at"] > now
-            )
-        )
+        grant_seconds = _active_grant_seconds(state, user_id, now)
 
         return allowance_seconds, usage_seconds, windows, grant_seconds
 
@@ -341,17 +353,10 @@ def get_user_policy(user_id: int, weekday: int):
 def get_remaining_grant_seconds(user_id: int) -> int:
     with _lock:
         state = _load_json()
-        now = datetime.now().isoformat()
-        return sum(
-            int(grant["remaining_seconds"])
-            for grant in state["temporary_grants"]
-            if int(grant["user_id"]) == int(user_id)
-            and not grant.get("consumed", False)
-            and int(grant["remaining_seconds"]) > 0
-            and (
-                grant.get("expires_at") is None
-                or grant["expires_at"] > now
-            )
+        return _active_grant_seconds(
+            state,
+            user_id,
+            datetime.now().isoformat(),
         )
 
 
@@ -407,16 +412,47 @@ def consume_grant_seconds(user_id: int, seconds: int):
         _save_json(state)
 
 
-def record_usage(user_id: int, seconds: int):
+def record_usage(user_id: int, seconds: int, usage_date: date | None = None):
     if seconds <= 0:
         return
 
     with _lock:
         state = _load_json()
-        today = datetime.now().date().isoformat()
-        key = f"{int(user_id)}:{today}"
+        target_date = usage_date or datetime.now().date()
+        key = f"{int(user_id)}:{target_date.isoformat()}"
         state["usage"][key] = int(state["usage"].get(key, 0)) + int(seconds)
         _save_json(state)
+
+
+def get_usage_history(user_id: int, days: int = 14):
+    days = max(1, min(int(days), 90))
+
+    with _lock:
+        config = _load_yaml()
+        state = _load_json()
+        user = _find_user(config, user_id)
+        if user is None:
+            return []
+
+        today = datetime.now().date()
+        history = []
+
+        for offset in range(days - 1, -1, -1):
+            day = today - timedelta(days=offset)
+            weekday = day.weekday()
+            allowance = int(
+                user.get("allowances", {}).get(str(weekday), 0)
+            )
+            key = f"{int(user_id)}:{day.isoformat()}"
+            used = int(state["usage"].get(key, 0))
+            history.append({
+                "date": day.isoformat(),
+                "weekday": weekday,
+                "used_seconds": used,
+                "allowance_seconds": allowance,
+            })
+
+        return history
 
 
 def list_grants(user_id: int, limit: int = 20):
@@ -440,6 +476,5 @@ def record_event(user_id, event_type: str, details: str = ""):
             "details": details,
             "created_at": datetime.now().isoformat(timespec="seconds"),
         })
-        # Keep the state file bounded.
         state["events"] = state["events"][-2000:]
         _save_json(state)

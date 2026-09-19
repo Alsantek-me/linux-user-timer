@@ -1,3 +1,4 @@
+import os
 import secrets
 from pathlib import Path
 
@@ -23,9 +24,12 @@ from .storage import (
     add_grant,
     list_grants,
     is_admin_allowed,
+    get_usage_history,
 )
 from .users import (
     linux_user_exists,
+    is_non_root_user,
+    list_available_users,
     lock_user,
     unlock_user,
     terminate_user,
@@ -34,13 +38,13 @@ from .users import (
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SESSION_SECRET = __import__("os").environ.get(
+SESSION_SECRET = os.environ.get(
     "PARENTAL_CONTROL_SESSION_SECRET"
 ) or secrets.token_urlsafe(32)
 
 app = FastAPI(
     title="Parental Control",
-    version="0.2.0",
+    version="0.3.0",
 )
 
 app.add_middleware(
@@ -49,9 +53,7 @@ app.add_middleware(
     session_cookie="parental_control_session",
     max_age=8 * 60 * 60,
     same_site="lax",
-    https_only=__import__("os").environ.get(
-        "PARENTAL_CONTROL_HTTPS_ONLY", "0"
-    ) == "1",
+    https_only=os.environ.get("PARENTAL_CONTROL_HTTPS_ONLY", "0") == "1",
 )
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -83,6 +85,8 @@ def current_user(request: Request):
     if not username:
         return None
 
+    # Re-check the Linux PAM group on every request so removing an account
+    # from the admin group takes effect without waiting for the session TTL.
     if not is_admin_allowed(username):
         request.session.clear()
         return None
@@ -100,7 +104,6 @@ def require_web_auth(request: Request):
             f"/login?next={next_path}",
             status_code=303,
         )
-
     return None
 
 
@@ -144,16 +147,19 @@ class GrantRequest(BaseModel):
 def root():
     return {
         "application": "Parental Control",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "status": "running",
-        "authentication": "PAM",
+        "authentication": "PAM + pam Linux group",
     }
 
 
 @app.get("/login")
 def login_page(request: Request, next: str = "/admin"):
     if current_user(request):
-        return RedirectResponse(next if next.startswith("/") and not next.startswith("//") else "/admin", status_code=303)
+        return RedirectResponse(
+            next if next.startswith("/") and not next.startswith("//") else "/admin",
+            status_code=303,
+        )
 
     return templates.TemplateResponse(
         request=request,
@@ -161,6 +167,7 @@ def login_page(request: Request, next: str = "/admin"):
         context={
             "next": next if next.startswith("/") else "/admin",
             "error": None,
+            "pam_group": get_config()["auth"].get("pam_group", "pam"),
         },
     )
 
@@ -191,6 +198,7 @@ def login(
             context={
                 "next": safe_next,
                 "error": "Invalid Linux username or password.",
+                "pam_group": get_config()["auth"].get("pam_group", "pam"),
             },
             status_code=401,
         )
@@ -201,7 +209,8 @@ def login(
             name="login.html",
             context={
                 "next": safe_next,
-                "error": "This Linux account is not allowed to access the administration panel.",
+                "error": "Your Linux account is authenticated, but it is not a member of the PAM administration group.",
+                "pam_group": get_config()["auth"].get("pam_group", "pam"),
             },
             status_code=403,
         )
@@ -234,6 +243,14 @@ def list_users_api(request: Request):
         }
         for user in users
     ]
+
+
+@app.get("/api/users/{user_id}/usage")
+def user_usage_api(request: Request, user_id: int, days: int = 14):
+    require_api_auth(request)
+    if get_user(user_id) is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return get_usage_history(user_id, days)
 
 
 @app.post("/api/users/{user_id}/lock")
@@ -318,13 +335,21 @@ def admin_page(request: Request):
     if redirect:
         return redirect
 
+    configured = {user["username"] for user in list_users()}
+    available_users = [
+        user for user in list_available_users()
+        if user["username"] not in configured
+    ]
+
     return templates.TemplateResponse(
         request=request,
         name="index.html",
         context={
             "users": list_users(),
+            "available_users": available_users,
             "username": current_user(request),
             "csrf_token": csrf_token(request),
+            "pam_group": get_config()["auth"].get("pam_group", "pam"),
         },
     )
 
@@ -349,6 +374,12 @@ def admin_user_page(request: Request, user_id: int):
         key=lambda item: (int(item["weekday"]), int(item["start_minute"])),
     )
 
+    usage_history = get_usage_history(user_id, 14)
+    total_used = sum(item["used_seconds"] for item in usage_history)
+    total_allowance = sum(item["allowance_seconds"] for item in usage_history)
+    today_used = usage_history[-1]["used_seconds"] if usage_history else 0
+    today_allowance = usage_history[-1]["allowance_seconds"] if usage_history else 0
+
     return templates.TemplateResponse(
         request=request,
         name="user.html",
@@ -359,6 +390,11 @@ def admin_user_page(request: Request, user_id: int):
             "allowances": allowances,
             "windows": windows,
             "grants": list_grants(user_id),
+            "usage_history": usage_history,
+            "total_used": total_used,
+            "total_allowance": total_allowance,
+            "today_used": today_used,
+            "today_allowance": today_allowance,
             "csrf_token": csrf_token(request),
             "username": current_user(request),
         },
@@ -530,6 +566,12 @@ def admin_add_user(
     username = username.strip()
     if not linux_user_exists(username):
         raise HTTPException(status_code=400, detail="Linux user does not exist")
+
+    if not is_non_root_user(username):
+        raise HTTPException(
+            status_code=400,
+            detail="Only regular non-root Linux users can be added to parental control.",
+        )
 
     if get_user_by_username(username) is not None:
         raise HTTPException(status_code=400, detail="User is already configured")

@@ -1,129 +1,108 @@
 # Linux Parental Control
 
-A Linux parental-control system for managing Linux user access, daily time allowances, access windows, temporary grants, and automatic session enforcement.
-
-> **Status:** Early development
+A Linux parental-control system for managing Linux user access, daily time allowances, access windows, temporary grants, usage history, and automatic session enforcement.
 
 ## Storage
 
 SQLite has been removed.
 
-The application now uses two files under `data/`:
+The application uses two files under `data/`:
 
-- `config.yaml` — users, daily allowances, access windows, and authentication configuration.
-- `state.json` — daily usage, temporary grants, and a bounded event history.
+- `config.yaml` — users, daily allowances, access windows, and PAM configuration.
+- `state.json` — daily usage, temporary grants, event history, and ID counters.
 
 The application never creates or opens `data/parental-control.db`.
 
-`config.yaml` and `state.json` are written atomically and are intended to be root-readable only.
-
 ## Web authentication
 
-The administration web interface is protected by **PAM**.
+The administration web interface uses Linux PAM for password authentication and a Linux group for authorization.
 
-Sign in at:
-
-```text
-http://127.0.0.1:8765/admin
-```
-
-Use an existing Linux username and its Linux password. The password is passed to PAM for authentication and is not stored by this application.
-
-The PAM service defaults to:
+The default PAM settings are:
 
 ```yaml
 auth:
   pam_service: login
+  pam_group: pam
 ```
 
-If your distribution uses a different PAM service, change `pam_service` in `data/config.yaml`.
+The installer creates the `pam` group and adds `root` to it. Any Linux account that successfully authenticates through the configured PAM service must also belong to this group to access `/admin`.
 
-### Restricting who can use the web panel
+To grant another administrator access:
 
-By default, any Linux account that successfully authenticates through PAM can access the web panel.
-
-For a restricted administration panel, edit `data/config.yaml`:
-
-```yaml
-auth:
-  pam_service: login
-  admin_users:
-    - youradminuser
+```bash
+sudo usermod -aG pam username
 ```
 
-Do **not** add a user controlled by the parental-control enforcement system to `admin_users`, because account locking is performed with `passwd`.
+To remove access:
 
-The web session is signed with a randomly generated secret stored in:
-
-```text
-/etc/parental-control/session-secret
-/etc/parental-control/session-secret.env
+```bash
+sudo gpasswd -d username pam
 ```
 
-## Features
+The application re-checks group membership on each request, so a removed member cannot continue using an existing session.
 
-- Per-user daily time allowances
-- Different allowances for each day of the week
-- Multiple access windows per day
-- Temporary time grants
-- Usage tracking
-- Automatic session termination
-- Automatic account locking
-- Automatic account unlocking
-- Reboot-safe enforcement
-- PAM-authenticated web administration
-- YAML configuration
-- JSON runtime state
-- systemd service support
+## Adding parental-control users
+
+The web interface provides a drop-down containing eligible regular Linux accounts that are not already configured.
+
+The selector excludes:
+
+- `root` / UID 0 accounts.
+- System accounts below the configured `UID_MIN`.
+- Accounts in the standard `wheel`, `sudo`, or `root` groups.
+
+This is intended to prevent the administrator account from accidentally being selected for parental enforcement.
+
+## Policy behavior
+
+Daily allowance and access windows are independent configuration items and may be created in any order.
+
+For a normal daily allowance:
+
+- If a day has no access window, there is no time-of-day restriction for that day.
+- If a day has one or more access windows, normal allowance access is permitted only while the current time is inside at least one configured window.
+- The daily allowance still limits the total normal usage for that day.
+- A temporary grant overrides the normal allowance and access-window restriction.
+
+The scheduler re-reads the current YAML/JSON state every enforcement cycle, so changing an allowance before or after a window produces the same final policy.
+
+## Usage graph
+
+Each managed user has a 14-day usage view showing:
+
+- Total usage over the last 14 calendar days.
+- Usage today.
+- Remaining allowance today.
+- A daily graph comparing recorded usage with the configured daily allowance.
+
+Usage data is stored in `state.json` and survives service restarts.
 
 ## Requirements
 
 The application targets Linux systems using `systemd`.
 
-You need:
+You need Linux, Python 3, Python virtual-environment support, pip, systemd, PAM, `sudo`, `passwd`, `loginctl`, and the standard user/group management commands.
 
-- Linux
-- Python 3
-- `python-venv`
-- `pip`
-- `systemd`
-- PAM
-- `sudo`
-- `passwd`
-- `loginctl`
-- Git
-
-The enforcement service requires **root privileges** because it manages other Linux users and their sessions.
+The enforcement service runs as `root` because it manages other Linux users and their sessions.
 
 ## Installation
-
-Clone the repository:
 
 ```bash
 git clone https://git.shihaam.dev/Alsan/linux-user-timer.git
 cd linux-user-timer
-```
-
-Make the installer executable:
-
-```bash
 chmod +x install.sh
-```
-
-Run:
-
-```bash
 sudo ./install.sh
 ```
 
-The installer:
+The Arch Linux installer intentionally runs:
 
-1. Installs Python dependencies including PyYAML and python-pam.
-2. Creates the Python virtual environment.
-3. Removes the legacy `data/parental-control.db` if it exists.
-4. Initializes `config.yaml` and `state.json`.
-5. Generates a random web-session secret.
-6. Installs and starts the systemd service.
+```bash
+pacman -S --needed python python-pip
+```
+
+It does **not** run `pacman -Syu`, so installing this application does not trigger a full Arch system upgrade.
+
+The installer also creates the `pam` group, adds `root`, creates the Python virtual environment, installs the application dependencies, removes the old SQLite database if present, creates the systemd service, and starts it.
 
 ## Service commands
 
@@ -131,6 +110,12 @@ The installer:
 sudo systemctl status parental-control
 sudo systemctl restart parental-control
 sudo journalctl -u parental-control -f
+```
+
+The administration panel is available at:
+
+```text
+http://127.0.0.1:8765/admin
 ```
 
 ## Reverse proxy / HTTPS
@@ -141,16 +126,14 @@ The application listens on:
 127.0.0.1:8765
 ```
 
-Put it behind your existing Nginx/Apache/reverse proxy if you want remote access.
+Put it behind your existing Nginx/Apache/reverse proxy if remote access is required.
 
-When HTTPS is provided directly to users, set:
+For HTTPS-only session cookies, set this in the systemd service:
 
 ```ini
 Environment="PARENTAL_CONTROL_HTTPS_ONLY=1"
 ```
 
-in the systemd service. This marks the session cookie as HTTPS-only.
+## Security note
 
-## Important security note
-
-This application controls Linux accounts and runs as root. Do not expose port `8765` directly to an untrusted network. Prefer binding it to localhost and placing it behind an HTTPS reverse proxy with appropriate firewall rules.
+This application controls Linux accounts and runs as root. Do not expose port `8765` directly to an untrusted network. Prefer localhost binding with an HTTPS reverse proxy and appropriate firewall rules.

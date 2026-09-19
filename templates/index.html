@@ -1,445 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parental Control</title>
-
     <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family:
-                system-ui,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
-
-            background: #f4f5f7;
-            color: #1f2937;
-        }
-
-
-        header {
-
-            background: #111827;
-            color: white;
-
-            padding: 20px 30px;
-
-        }
-
-
-        header h1 {
-
-            margin: 0;
-            font-size: 24px;
-
-        }
-
-
-        main {
-
-            max-width: 1100px;
-
-            margin: 30px auto;
-
-            padding: 0 20px;
-
-        }
-
-
-        .topbar {
-
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            margin-bottom: 25px;
-
-        }
-
-
-        .topbar h2 {
-
-            margin: 0;
-
-        }
-
-
-        .card {
-
-            background: white;
-
-            border-radius: 12px;
-
-            padding: 20px;
-
-            margin-bottom: 15px;
-
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.08);
-
-        }
-
-
-        .user-header {
-
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-        }
-
-
-        .username {
-
-            font-size: 20px;
-
-            font-weight: 600;
-
-        }
-
-
-        .status {
-
-            display: inline-block;
-
-            padding: 5px 10px;
-
-            border-radius: 20px;
-
-            font-size: 13px;
-
-        }
-
-
-        .status-enabled {
-
-            background: #dcfce7;
-
-            color: #166534;
-
-        }
-
-
-        .status-disabled {
-
-            background: #fee2e2;
-
-            color: #991b1b;
-
-        }
-
-
-        .actions {
-
-            display: flex;
-
-            gap: 10px;
-
-            margin-top: 15px;
-
-            flex-wrap: wrap;
-
-        }
-
-
-        button {
-
-            border: 0;
-
-            border-radius: 7px;
-
-            padding: 9px 15px;
-
-            cursor: pointer;
-
-            font-size: 14px;
-
-        }
-
-
-        .button-primary {
-
-            background: #2563eb;
-
-            color: white;
-
-        }
-
-
-        .button-danger {
-
-            background: #dc2626;
-
-            color: white;
-
-        }
-
-
-        .button-secondary {
-
-            background: #e5e7eb;
-
-            color: #111827;
-
-        }
-
-
-        .add-user {
-
-            margin-top: 30px;
-
-        }
-
-
-        .add-user form {
-
-            display: flex;
-
-            gap: 10px;
-
-            flex-wrap: wrap;
-
-        }
-
-
-        input {
-
-            border: 1px solid #d1d5db;
-
-            border-radius: 7px;
-
-            padding: 9px 12px;
-
-            font-size: 14px;
-
-        }
-
-
-        .empty {
-
-            color: #6b7280;
-
-        }
-
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f5f7; color: #1f2937; }
+        header { background: #111827; color: white; padding: 20px 30px; }
+        header h1 { margin: 0; font-size: 24px; }
+        main { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; gap: 15px; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+        .user-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .username { font-size: 20px; font-weight: 600; }
+        .muted { color: #6b7280; font-size: 14px; }
+        .status { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 13px; }
+        .status-enabled { background: #dcfce7; color: #166534; }
+        .status-locked { background: #fee2e2; color: #991b1b; }
+        .actions { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        button, .button { border: 0; border-radius: 7px; padding: 9px 15px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .button-primary { background: #2563eb; color: white; }
+        .button-danger { background: #dc2626; color: white; }
+        .button-secondary { background: #e5e7eb; color: #111827; }
+        .add-user form { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        input, select { border: 1px solid #d1d5db; border-radius: 7px; padding: 9px 12px; font-size: 14px; background: white; }
+        select { min-width: 320px; }
+        .empty { color: #6b7280; }
+        .info { margin-top: 10px; padding: 12px 14px; background: #eff6ff; border-radius: 8px; color: #1e40af; font-size: 14px; }
+        @media (max-width: 700px) { select { min-width: 100%; } }
     </style>
-
 </head>
-
-
 <body>
-
-
 <header>
-
-    <h1>
-        Parental Control
-    </h1>
-
-    <div style="margin-top:8px;font-size:14px;">Signed in as <strong>{{ username }}</strong>
+    <h1>Parental Control</h1>
+    <div style="margin-top:8px;font-size:14px;">
+        Signed in as <strong>{{ username }}</strong>
         <form method="post" action="/logout" style="display:inline;margin-left:12px;">
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
             <input type="hidden" name="csrf" value="{{ csrf_token }}">
             <button type="submit" class="button-secondary">Log out</button>
         </form>
     </div>
-
 </header>
 
-
 <main>
-
-
     <div class="topbar">
-
-        <h2>
-            Users
-        </h2>
-
+        <div>
+            <h2 style="margin:0;">Users</h2>
+            <div class="muted" style="margin-top:6px;">Configure Linux accounts controlled by this service.</div>
+        </div>
     </div>
-
 
     {% if users %}
-
-
         {% for user in users %}
-
-
         <div class="card">
-
-
             <div class="user-header">
-
-
                 <div>
-
-                    <div class="username">
-
-                        {{ user.username }}
-
-                    </div>
-
-
-                    <div>
-
-                        Linux user ID:
-                        {{ user.id }}
-
-                    </div>
-
+                    <div class="username">{{ user.username }}</div>
+                    <div class="muted">Application user ID: {{ user.id }}</div>
                 </div>
-
-
                 {% if user.enabled %}
-
-                    <span class="status status-enabled">
-
-                        Enabled
-
-                    </span>
-
-                {% else %}
-
-                    <span class="status status-disabled">
-
-                        Disabled
-
-                    </span>
-
+                    <span class="status status-enabled">Enabled</span>
                 {% endif %}
-
-
             </div>
-
 
             <div class="actions">
-
-
-                <a
-                    href="/admin/users/{{ user.id }}"
-                >
-
-                    <button
-                        class="button-primary"
-                        type="button"
-                    >
-
-                        Manage
-
-                    </button>
-
-                </a>
-
-
-                <form
-                    method="post"
-                    action="/admin/users/{{ user.id }}/delete"
-                >
+                <a class="button button-primary" href="/admin/users/{{ user.id }}">Manage</a>
+                <form method="post" action="/admin/users/{{ user.id }}/delete">
                     <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-                    <button
-                        class="button-danger"
-                        type="submit"
-                    >
-
-                        Delete
-
-                    </button>
-
+                    <button class="button-danger" type="submit" onclick="return confirm('Remove this user from parental control?');">Delete</button>
                 </form>
-
-
             </div>
-
-
         </div>
-
-
         {% endfor %}
-
-
     {% else %}
-
-
-        <div class="card empty">
-
-            No users configured yet.
-
-        </div>
-
-
+        <div class="card empty">No users configured yet.</div>
     {% endif %}
 
-
-
     <div class="card add-user">
+        <h2 style="margin-top:0;">Add User</h2>
+        <p class="muted">Select an existing regular Linux account. Root, system accounts, and accounts with standard sudo/wheel access are excluded.</p>
 
-
-        <h2>
-            Add User
-        </h2>
-
-
-        <p>
-
-            Add an existing Linux account to
-            parental control.
-
-        </p>
-
-
-        <form
-            method="post"
-            action="/admin/users"
-        >
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-
-            <input
-                type="text"
-                name="username"
-                placeholder="Linux username"
-                required
-            >
-
-
-            <button
-                class="button-primary"
-                type="submit"
-            >
-
-                Add User
-
-            </button>
-
-
+        {% if available_users %}
+        <form method="post" action="/admin/users">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <select name="username" required>
+                <option value="" selected disabled>Select a Linux user</option>
+                {% for candidate in available_users %}
+                    <option value="{{ candidate.username }}">
+                        {{ candidate.username }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button class="button-primary" type="submit">Add User</button>
         </form>
-
-
+        {% else %}
+            <div class="info">No eligible non-root Linux users are currently available to add.</div>
+        {% endif %}
     </div>
 
-
+    <div class="card">
+        <strong>PAM administration group:</strong> <code>{{ pam_group }}</code>
+        <div class="muted" style="margin-top:6px;">Only Linux users who authenticate with PAM and belong to this group can use the web panel.</div>
+    </div>
 </main>
-
-
 </body>
-
 </html>

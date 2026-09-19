@@ -1,875 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>
-        Manage {{ user.username }}
-    </title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage {{ user.username }}</title>
     <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-
-            font-family:
-                system-ui,
-                -apple-system,
-                BlinkMacSystemFont,
-                "Segoe UI",
-                sans-serif;
-
-            background: #f4f5f7;
-            color: #1f2937;
-        }
-
-        header {
-            background: #111827;
-            color: white;
-
-            padding: 20px 30px;
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        main {
-            max-width: 1100px;
-
-            margin: 30px auto;
-
-            padding: 0 20px;
-        }
-
-        .back {
-            display: inline-block;
-
-            margin-bottom: 20px;
-
-            color: #2563eb;
-
-            text-decoration: none;
-
-            font-size: 14px;
-        }
-
-        .card {
-            background: white;
-
-            border-radius: 12px;
-
-            padding: 20px;
-
-            margin-bottom: 20px;
-
-            box-shadow:
-                0 2px 8px rgba(
-                    0,
-                    0,
-                    0,
-                    0.08
-                );
-        }
-
-        .header-row {
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            gap: 20px;
-
-            flex-wrap: wrap;
-        }
-
-        .username {
-            font-size: 28px;
-
-            font-weight: 700;
-        }
-
-        .status {
-            display: inline-block;
-
-            padding: 6px 12px;
-
-            border-radius: 20px;
-
-            font-size: 13px;
-        }
-
-        .status-locked {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .status-unlocked {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        h2 {
-            margin-top: 0;
-        }
-
-        h3 {
-            margin-bottom: 8px;
-        }
-
-        .actions {
-            display: flex;
-
-            gap: 10px;
-
-            flex-wrap: wrap;
-
-            margin-top: 20px;
-        }
-
-        button {
-            border: 0;
-
-            border-radius: 7px;
-
-            padding: 9px 15px;
-
-            cursor: pointer;
-
-            font-size: 14px;
-        }
-
-        .primary {
-            background: #2563eb;
-            color: white;
-        }
-
-        .danger {
-            background: #dc2626;
-            color: white;
-        }
-
-        .warning {
-            background: #d97706;
-            color: white;
-        }
-
-        .secondary {
-            background: #e5e7eb;
-            color: #111827;
-        }
-
-        table {
-            width: 100%;
-
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            text-align: left;
-
-            padding: 12px;
-
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        th {
-            font-size: 13px;
-
-            color: #6b7280;
-        }
-
-        input,
-        select {
-            border: 1px solid #d1d5db;
-
-            border-radius: 7px;
-
-            padding: 8px 10px;
-
-            font-size: 14px;
-
-            background: white;
-        }
-
-        input[type="number"] {
-            width: 80px;
-        }
-
-        input[type="time"] {
-            width: 130px;
-        }
-
-        .inline-form {
-            display: flex;
-
-            gap: 8px;
-
-            align-items: center;
-
-            flex-wrap: wrap;
-        }
-
-        .window-form {
-            display: grid;
-
-            grid-template-columns:
-                150px
-                130px
-                130px
-                auto;
-
-            gap: 10px;
-
-            align-items: center;
-        }
-
-        .window {
-            display: flex;
-
-            justify-content: space-between;
-
-            align-items: center;
-
-            gap: 15px;
-
-            padding: 12px 0;
-
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .window:last-child {
-            border-bottom: 0;
-        }
-
-        .muted {
-            color: #6b7280;
-
-            font-size: 14px;
-        }
-
-        .danger-zone {
-            border: 1px solid #fecaca;
-
-            background: #fff7f7;
-        }
-
-        .grant-box {
-            display: flex;
-
-            gap: 10px;
-
-            align-items: center;
-
-            flex-wrap: wrap;
-        }
-
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f5f7; color: #1f2937; }
+        header { background: #111827; color: white; padding: 20px 30px; }
+        header h1 { margin: 0; font-size: 24px; }
+        main { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+        .back { display: inline-block; margin-bottom: 20px; color: #2563eb; text-decoration: none; font-size: 14px; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+        .header-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .username { font-size: 28px; font-weight: 700; }
+        .status { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 13px; }
+        .status-locked { background: #fee2e2; color: #991b1b; }
+        .status-unlocked { background: #dcfce7; color: #166534; }
+        h2 { margin-top: 0; }
+        h3 { margin-bottom: 8px; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        button { border: 0; border-radius: 7px; padding: 9px 15px; cursor: pointer; font-size: 14px; }
+        .primary { background: #2563eb; color: white; }
+        .danger { background: #dc2626; color: white; }
+        .warning { background: #d97706; color: white; }
+        .secondary { background: #e5e7eb; color: #111827; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e5e7eb; }
+        th { font-size: 13px; color: #6b7280; }
+        input, select { border: 1px solid #d1d5db; border-radius: 7px; padding: 8px 10px; font-size: 14px; background: white; }
+        input[type="number"] { width: 80px; }
+        input[type="time"] { width: 130px; }
+        .inline-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .window-form { display: grid; grid-template-columns: 130px 130px auto; gap: 10px; align-items: center; }
+        .window { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+        .window:last-child { border-bottom: 0; }
+        .muted { color: #6b7280; font-size: 14px; }
+        .danger-zone { border: 1px solid #fecaca; background: #fff7f7; }
+        .grant-box { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+        .stat { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px; }
+        .stat-label { color: #6b7280; font-size: 13px; }
+        .stat-value { font-size: 22px; font-weight: 700; margin-top: 3px; }
+        .chart-wrap { width: 100%; height: 320px; margin-top: 20px; }
+        canvas { width: 100%; height: 100%; display: block; }
+        .legend { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: #6b7280; }
+        .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; background: currentColor; }
+        .legend .used { color: #2563eb; }
+        .legend .allowance { color: #9ca3af; }
         @media (max-width: 700px) {
-
-            table {
-                display: block;
-
-                overflow-x: auto;
-            }
-
-            .window-form {
-                grid-template-columns: 1fr;
-            }
-
+            table { display: block; overflow-x: auto; }
+            .window-form { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: 1fr; }
+            .chart-wrap { height: 260px; }
         }
-
     </style>
 </head>
-
 <body>
-
 <header>
-
-    <h1>
-        Parental Control
-    </h1>
-
-    <div style="margin-top:8px;font-size:14px;">Signed in as <strong>{{ username }}</strong>
+    <h1>Parental Control</h1>
+    <div style="margin-top:8px;font-size:14px;">
+        Signed in as <strong>{{ username }}</strong>
         <form method="post" action="/logout" style="display:inline;margin-left:12px;">
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
             <input type="hidden" name="csrf" value="{{ csrf_token }}">
             <button type="submit" class="secondary">Log out</button>
         </form>
     </div>
-
 </header>
 
 <main>
-
-    <a
-        class="back"
-        href="/admin"
-    >
-        ← Back to Users
-    </a>
-
-
-    <!-- USER HEADER -->
+    <a class="back" href="/admin">← Back to Users</a>
 
     <div class="card">
-
         <div class="header-row">
-
             <div>
-
-                <div class="username">
-                    {{ user.username }}
-                </div>
-
-                <div class="muted">
-                    Linux user ID:
-                    {{ user.id }}
-                </div>
-
+                <div class="username">{{ user.username }}</div>
+                <div class="muted">Application user ID: {{ user.id }}</div>
             </div>
-
-
             {% if locked %}
-
-                <span class="status status-locked">
-                    Locked
-                </span>
-
+                <span class="status status-locked">Locked</span>
             {% else %}
-
-                <span class="status status-unlocked">
-                    Unlocked
-                </span>
-
+                <span class="status status-unlocked">Unlocked</span>
             {% endif %}
-
         </div>
-
 
         <div class="actions">
-
             {% if locked %}
-
-                <form
-                    method="post"
-                    action="/admin/users/{{ user.id }}/unlock"
-                >
+                <form method="post" action="/admin/users/{{ user.id }}/unlock">
                     <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-                    <button
-                        class="primary"
-                        type="submit"
-                    >
-                        Unlock
-                    </button>
-
+                    <button class="primary" type="submit">Unlock</button>
                 </form>
-
             {% else %}
-
-                <form
-                    method="post"
-                    action="/admin/users/{{ user.id }}/lock"
-                >
+                <form method="post" action="/admin/users/{{ user.id }}/lock">
                     <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-                    <button
-                        class="warning"
-                        type="submit"
-                    >
-                        Lock
-                    </button>
-
+                    <button class="warning" type="submit">Lock</button>
                 </form>
-
             {% endif %}
 
-
-            <form
-                method="post"
-                action="/admin/users/{{ user.id }}/terminate"
-            >
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-                <button
-                    class="secondary"
-                    type="submit"
-                >
-                    Terminate Session
-                </button>
-
+            <form method="post" action="/admin/users/{{ user.id }}/terminate">
+                <input type="hidden" name="csrf" value="{{ csrf_token }}">
+                <button class="secondary" type="submit">Terminate Session</button>
             </form>
+        </div>
+    </div>
 
+    <div class="card">
+        <h2>Usage</h2>
+        <p class="muted">Recorded usage for the last 14 calendar days. Normal usage is counted only while the account is inside its allowed policy and logged in.</p>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Total used (14 days)</div>
+                <div class="stat-value" id="total-used">0m</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Used today</div>
+                <div class="stat-value" id="today-used">0m</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Remaining today</div>
+                <div class="stat-value" id="today-remaining">0m</div>
+            </div>
         </div>
 
+        <div class="chart-wrap">
+            <canvas id="usage-chart" aria-label="Daily usage and configured daily allowance"></canvas>
+        </div>
+        <div class="legend">
+            <span class="used">Used</span>
+            <span class="allowance">Daily allowance</span>
+        </div>
     </div>
 
-
-    <!-- DAILY ALLOWANCES -->
-
     <div class="card">
-
-        <h2>
-            Daily Allowance
-        </h2>
-
-        <p class="muted">
-            Maximum amount of usage allowed on each day.
-        </p>
-
-
+        <h2>Daily Allowance</h2>
+        <p class="muted">Maximum normal usage allowed on each day. Access windows are a separate condition, so either section can be configured first.</p>
         <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>
-                        Day
-                    </th>
-
-                    <th>
-                        Hours
-                    </th>
-
-                    <th>
-                        Minutes
-                    </th>
-
-                    <th>
-                        Save
-                    </th>
-
-                </tr>
-
-            </thead>
-
+            <thead><tr><th>Day</th><th>Hours</th><th>Minutes</th><th>Save</th></tr></thead>
             <tbody>
-
                 {% for weekday, name in weekdays %}
-
-                {% set total_seconds = allowances.get(
-                    weekday,
-                    0
-                ) %}
-
+                {% set total_seconds = allowances.get(weekday, 0) %}
                 {% set total_minutes = total_seconds // 60 %}
-
                 {% set hours = total_minutes // 60 %}
-
                 {% set minutes = total_minutes % 60 %}
-
                 <tr>
-
-                    <td>
-                        <strong>
-                            {{ name }}
-                        </strong>
-                    </td>
-
+                    <td><strong>{{ name }}</strong></td>
                     <td colspan="2">
-
-                        <form
-                            class="inline-form"
-                            method="post"
-                            action="/admin/users/{{ user.id }}/allowance"
-                        >
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-                            <input
-                                type="hidden"
-                                name="weekday"
-                                value="{{ weekday }}"
-                            >
-
-                            <input
-                                type="number"
-                                name="hours"
-                                min="0"
-                                value="{{ hours }}"
-                                required
-                            >
-
-                            <span>
-                                hours
-                            </span>
-
-                            <input
-                                type="number"
-                                name="minutes"
-                                min="0"
-                                max="59"
-                                value="{{ minutes }}"
-                                required
-                            >
-
-                            <span>
-                                minutes
-                            </span>
-
+                        <form class="inline-form" method="post" action="/admin/users/{{ user.id }}/allowance">
+                            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+                            <input type="hidden" name="weekday" value="{{ weekday }}">
+                            <input type="number" name="hours" min="0" value="{{ hours }}" required>
+                            <span>hours</span>
+                            <input type="number" name="minutes" min="0" max="59" value="{{ minutes }}" required>
+                            <span>minutes</span>
                     </td>
-
-                    <td>
-
-                            <button
-                                class="primary"
-                                type="submit"
-                            >
-                                Save
-                            </button>
-
-                        </form>
-
-                    </td>
-
+                    <td><button class="primary" type="submit">Save</button></form></td>
                 </tr>
-
                 {% endfor %}
-
             </tbody>
-
         </table>
-
     </div>
 
-
-    <!-- ACCESS WINDOWS -->
-
     <div class="card">
-
-        <h2>
-            Access Windows
-        </h2>
-
-        <p class="muted">
-            Define when this user is allowed to access
-            the computer. Multiple windows can be created
-            for the same day.
-        </p>
-
+        <h2>Access Windows</h2>
+        <p class="muted">When at least one window exists for a day, normal allowance access is allowed only inside those windows. If no window exists for that day, there is no time-of-day restriction.</p>
 
         {% for weekday, name in weekdays %}
-
             {% set day_windows = [] %}
-
             {% for window in windows %}
-
                 {% if window.weekday == weekday %}
-
                     {% set _ = day_windows.append(window) %}
-
                 {% endif %}
-
             {% endfor %}
 
-
-            <h3>
-                {{ name }}
-            </h3>
-
+            <h3>{{ name }}</h3>
 
             {% for window in day_windows %}
-
-                {% set start_hour =
-                    window.start_minute // 60
-                %}
-
-                {% set start_min =
-                    window.start_minute % 60
-                %}
-
-                {% set end_hour =
-                    window.end_minute // 60
-                %}
-
-                {% set end_min =
-                    window.end_minute % 60
-                %}
-
-
+                {% set start_hour = window.start_minute // 60 %}
+                {% set start_min = window.start_minute % 60 %}
+                {% set end_hour = window.end_minute // 60 %}
+                {% set end_min = window.end_minute % 60 %}
                 <div class="window">
-
                     <div>
-
-                        <strong>
-                            {{ "%02d:%02d" | format(
-                                start_hour,
-                                start_min
-                            ) }}
-
-                            –
-
-                            {{ "%02d:%02d" | format(
-                                end_hour,
-                                end_min
-                            ) }}
-                        </strong>
-
+                        <strong>{{ "%02d:%02d"|format(start_hour, start_min) }} – {{ "%02d:%02d"|format(end_hour, end_min) }}</strong>
                     </div>
-
-
-                    <form
-                        method="post"
-                        action="/admin/windows/{{ window.id }}/delete"
-                    >
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-                        <button
-                            class="danger"
-                            type="submit"
-                        >
-                            Remove
-                        </button>
-
+                    <form method="post" action="/admin/windows/{{ window.id }}/delete">
+                        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+                        <button class="danger" type="submit">Remove</button>
                     </form>
-
                 </div>
-
             {% endfor %}
 
-
-            <form
-                class="window-form"
-                method="post"
-                action="/admin/users/{{ user.id }}/window"
-                style="margin-top: 12px;"
-            >
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-                <input
-                    type="hidden"
-                    name="weekday"
-                    value="{{ weekday }}"
-                >
-
-                <input
-                    type="time"
-                    name="start_time"
-                    required
-                >
-
-                <input
-                    type="time"
-                    name="end_time"
-                    required
-                >
-
-                <button
-                    class="primary"
-                    type="submit"
-                >
-                    Add Window
-                </button>
-
+            <form class="window-form" method="post" action="/admin/users/{{ user.id }}/window" style="margin-top:12px;">
+                <input type="hidden" name="csrf" value="{{ csrf_token }}">
+                <input type="hidden" name="weekday" value="{{ weekday }}">
+                <input type="time" name="start_time" required>
+                <input type="time" name="end_time" required>
+                <button class="primary" type="submit">Add Window</button>
             </form>
-
         {% endfor %}
-
     </div>
 
-
-    <!-- TEMPORARY GRANT -->
-
     <div class="card">
-
-        <h2>
-            Give Temporary Time
-        </h2>
-
-        <p class="muted">
-            Add extra time that can be used outside the
-            normal allowance.
-        </p>
-
-
-        <form
-            class="grant-box"
-            method="post"
-            action="/admin/users/{{ user.id }}/grant"
-        >
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-            <input
-                type="number"
-                name="hours"
-                min="0"
-                value="0"
-                required
-            >
-
-            <span>
-                hours
-            </span>
-
-            <input
-                type="number"
-                name="minutes"
-                min="0"
-                max="59"
-                value="5"
-                required
-            >
-
-            <span>
-                minutes
-            </span>
-
-            <button
-                class="primary"
-                type="submit"
-            >
-                Give Time
-            </button>
-
+        <h2>Give Temporary Time</h2>
+        <p class="muted">Temporary time is an override and may be used outside the normal access window and daily allowance.</p>
+        <form class="grant-box" method="post" action="/admin/users/{{ user.id }}/grant">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <input type="number" name="hours" min="0" value="0" required>
+            <span>hours</span>
+            <input type="number" name="minutes" min="0" max="59" value="5" required>
+            <span>minutes</span>
+            <button class="primary" type="submit">Give Time</button>
         </form>
-
     </div>
-
-
-    <!-- GRANT HISTORY -->
 
     <div class="card">
-
-        <h2>
-            Temporary Grants
-        </h2>
-
+        <h2>Temporary Grants</h2>
         {% if grants %}
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Time
-                        </th>
-
-                        <th>
-                            Created
-                        </th>
-
-                        <th>
-                            Status
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for grant in grants %}
-
-                    <tr>
-
-                        <td>
-
-                            {% set grant_minutes =
-                                grant.seconds // 60
-                            %}
-
-                            {% set grant_hours =
-                                grant_minutes // 60
-                            %}
-
-                            {% set grant_remaining =
-                                grant_minutes % 60
-                            %}
-
-                            {{ grant_hours }}h
-                            {{ grant_remaining }}m
-
-                        </td>
-
-                        <td>
-                            {{ grant.created_at }}
-                        </td>
-
-                        <td>
-
-                            {% if grant.consumed %}
-
-                                Used
-
-                            {% else %}
-
-                                Available
-
-                            {% endif %}
-
-                        </td>
-
-                    </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
+        <table>
+            <thead><tr><th>Time</th><th>Created</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for grant in grants %}
+                <tr>
+                    <td>
+                        {% set grant_minutes = grant.seconds // 60 %}
+                        {% set grant_hours = grant_minutes // 60 %}
+                        {% set grant_remaining = grant_minutes % 60 %}
+                        {{ grant_hours }}h {{ grant_remaining }}m
+                    </td>
+                    <td>{{ grant.created_at }}</td>
+                    <td>{% if grant.consumed %}Used{% else %}Available{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
         {% else %}
-
-            <p class="muted">
-                No temporary grants yet.
-            </p>
-
+            <p class="muted">No temporary grants yet.</p>
         {% endif %}
-
     </div>
-
-
-    <!-- DANGER ZONE -->
 
     <div class="card danger-zone">
-
-        <h2>
-            Danger Zone
-        </h2>
-
-        <p class="muted">
-            Removing this user deletes their parental
-            control configuration from this application.
-            It does not delete the Linux account.
-        </p>
-
-        <form
-            method="post"
-            action="/admin/users/{{ user.id }}/delete"
-            onsubmit="
-                return confirm(
-                    'Remove this user from parental control?'
-                );
-            "
-        >
-                    <input type="hidden" name="csrf" value="{{ csrf_token }}">
-
-            <button
-                class="danger"
-                type="submit"
-            >
-                Remove from Parental Control
-            </button>
-
+        <h2>Danger Zone</h2>
+        <p class="muted">Removing this user deletes their parental-control configuration from this application. It does not delete the Linux account.</p>
+        <form method="post" action="/admin/users/{{ user.id }}/delete" onsubmit="return confirm('Remove this user from parental control?');">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <button class="danger" type="submit">Remove from Parental Control</button>
         </form>
-
     </div>
-
 </main>
 
+<script>
+const historyData = {{ usage_history | tojson }};
+
+function formatTime(seconds) {
+    seconds = Math.max(0, Math.round(Number(seconds) || 0));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+}
+
+document.getElementById('total-used').textContent = formatTime(
+    historyData.reduce((sum, item) => sum + Number(item.used_seconds || 0), 0)
+);
+
+document.getElementById('today-used').textContent = formatTime(
+    historyData.length ? historyData[historyData.length - 1].used_seconds : 0
+);
+
+document.getElementById('today-remaining').textContent = formatTime(
+    historyData.length
+        ? Math.max(0, Number(historyData[historyData.length - 1].allowance_seconds || 0) - Number(historyData[historyData.length - 1].used_seconds || 0))
+        : 0
+);
+
+function drawUsageChart() {
+    const canvas = document.getElementById('usage-chart');
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(320, Math.round(rect.width));
+    const height = Math.max(220, Math.round(rect.height));
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+
+    const left = 48;
+    const right = 16;
+    const top = 18;
+    const bottom = 42;
+    const chartWidth = width - left - right;
+    const chartHeight = height - top - bottom;
+    const maxValue = Math.max(
+        3600,
+        ...historyData.flatMap(item => [Number(item.used_seconds || 0), Number(item.allowance_seconds || 0)])
+    );
+
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.fillStyle = '#6b7280';
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i <= 4; i++) {
+        const y = top + chartHeight - (chartHeight * i / 4);
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(left + chartWidth, y);
+        ctx.stroke();
+        const value = Math.round(maxValue * i / 4);
+        ctx.fillText(formatTime(value), 4, y + 4);
+    }
+
+    const slot = chartWidth / historyData.length;
+    const barWidth = Math.max(4, slot * 0.55);
+
+    historyData.forEach((item, index) => {
+        const used = Number(item.used_seconds || 0);
+        const allowance = Number(item.allowance_seconds || 0);
+        const x = left + index * slot + (slot - barWidth) / 2;
+        const usedHeight = (used / maxValue) * chartHeight;
+        const allowanceY = top + chartHeight - (allowance / maxValue) * chartHeight;
+
+        ctx.fillStyle = '#2563eb';
+        ctx.fillRect(x, top + chartHeight - usedHeight, barWidth, usedHeight);
+
+        ctx.fillStyle = '#9ca3af';
+        ctx.fillRect(x, Math.max(top, allowanceY - 2), barWidth, 4);
+
+        const date = item.date.slice(5);
+        ctx.fillStyle = '#6b7280';
+        ctx.textAlign = 'center';
+        ctx.fillText(date, x + barWidth / 2, top + chartHeight + 22);
+    });
+}
+
+window.addEventListener('resize', drawUsageChart);
+drawUsageChart();
+</script>
 </body>
 </html>

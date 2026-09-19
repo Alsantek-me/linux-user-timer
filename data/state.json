@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "next_ids": {
+    "user": 3,
+    "window": 2,
+    "grant": 1
+  },
+  "usage": {},
+  "temporary_grants": [],
+  "events": []
+}
